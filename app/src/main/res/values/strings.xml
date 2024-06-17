@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Duel</string>
+    <string name="p1imgname">Cyan.png</string>
+    <string name="p2imgname">yellow.png</string>
+
+</resources>
