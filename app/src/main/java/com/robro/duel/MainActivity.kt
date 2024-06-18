@@ -49,7 +49,7 @@ fun Float.toRadians(): Float = this / 180f * PI.toFloat()
 fun Float.toDegrees(): Float = this * 180f / PI.toFloat()
 var p1Color by mutableStateOf(Color.Cyan)
 var p2Color by mutableStateOf(Color.Yellow)
-val collisionBoxesShown = false
+const val collisionBoxesShown = false
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -160,7 +160,6 @@ class MainActivity : ComponentActivity() {
             winCheck(p1TrackpadStruct, p2TrackpadStruct)
         }
     }
-
 }
 
 fun winCheck(p1:Trackpad, p2:Trackpad) {
@@ -206,10 +205,13 @@ class Trackpad(private val screenDimensions:Pair<Float,Float>, private val scree
     )
     private fun updateOffset(deltaX: Float, deltaY: Float) {
         offset = Pair(
-            max(0f,
-                min(screenDimensions.first,offset.first + deltaX * speedCoefficient)),
-            max(0f,
-                min(screenDimensions.second,offset.second + deltaY * speedCoefficient))
+            max(
+                -imageWidth/2 * screenDensity,
+                min(screenDimensions.first-imageWidth/2 * screenDensity,
+                    offset.first + deltaX * speedCoefficient)),
+            max(-imageHeight/2f * screenDensity,
+                min(screenDimensions.second- imageHeight/2 * screenDensity,
+                    offset.second + deltaY * speedCoefficient))
         )
         val weightCoef = 20
         val spinVec: Pair<Float, Float> = Pair(cos(spinOffset.toRadians()), sin(spinOffset.toRadians()))
