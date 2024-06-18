@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="imageWidth">20</integer>
+    <integer name="imageHeight">20</integer>
+    <integer name="speedCoefficient">3</integer>
+</resources>
