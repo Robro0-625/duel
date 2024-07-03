@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -47,8 +49,8 @@ const val imageHeight = 20
 const val imageWidth = 20
 fun Float.toRadians(): Float = this / 180f * PI.toFloat()
 fun Float.toDegrees(): Float = this * 180f / PI.toFloat()
-var p1Color by mutableStateOf(Color.Cyan)
-var p2Color by mutableStateOf(Color.Yellow)
+//var p1Color by mutableStateOf(Color.Cyan)
+//var p2Color by mutableStateOf(Color.Yellow)
 const val collisionBoxesShown = false
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
@@ -67,7 +69,9 @@ class MainActivity : ComponentActivity() {
                         Pair(screenWidth,screenHeight),
                         screenDensity,
                         (screenWidth) * 1 / 2 - imageWidth * (screenDensity) / 2,
-                        (screenHeight) * 1 / 5 - imageHeight * (screenDensity) / 2
+                        (screenHeight) * 1 / 5 - imageHeight * (screenDensity) / 2,
+                        90f,
+                        Color.Cyan
                     )
                 )
             }
@@ -77,7 +81,9 @@ class MainActivity : ComponentActivity() {
                         Pair(screenWidth,screenHeight),
                         screenDensity,
                         (screenWidth) * 1 / 2 - imageWidth * screenDensity / 2,
-                        (screenHeight) * 4 / 5 - imageHeight * screenDensity / 2, 270f
+                        (screenHeight) * 4 / 5 - imageHeight * screenDensity / 2,
+                        270f,
+                        Color.Yellow
                     )
                 )
             }
@@ -88,7 +94,7 @@ class MainActivity : ComponentActivity() {
                     Column(modifier = Modifier.fillMaxSize()) {
                         p1TrackpadStruct.Pad(
                             modifier = Modifier.weight(1f, true),
-                            color = p1Color
+                            color = p1TrackpadStruct.color()
                         )
                         Box(
                             Modifier
@@ -96,82 +102,47 @@ class MainActivity : ComponentActivity() {
                                 .weight(0.5f)
                                 .background(
                                     Brush.verticalGradient(
-                                        arrayListOf(p1Color, p2Color)
+                                        arrayListOf(p1TrackpadStruct.color(), p2TrackpadStruct.color())
                                     )
                                 )
-                        )
+                        ){
+                           if ((p1TrackpadStruct.state == TState.Dead ) || (p2TrackpadStruct.state == TState.Dead)){
+                                Button(
+                                    onClick = {
+                                        p1TrackpadStruct.reset()
+                                        p2TrackpadStruct.reset()
+                                    },
+                                    Modifier.align(Alignment.Center)
+                                ) {
+                                    Text(text = "Reset")
+                                }
+                           }
+                        }
                         p2TrackpadStruct.Pad(
                             modifier = Modifier.weight(1f, true),
-                            color = p2Color
+                            color = p2TrackpadStruct.color()
                         )
                     }
                     p1TrackpadStruct.Cursor(image = R.drawable.cyan)
                     p2TrackpadStruct.Cursor(image = R.drawable.yellow)
                 }
-                val hurtcol = Color(
-                    0, 0, 255, if (collisionBoxesShown) {
-                        127
-                    } else {
-                        0
-                    }
-                )
-                val hitcol = Color(
-                    255, 0, 0, if (collisionBoxesShown) {
-                        127
-                    } else {
-                        0
-                    }
-                )
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .align(Alignment.Center)
-                ) {
-                    drawCircle(
-                        hurtcol, 25f,
-                        Offset(
-                            p1TrackpadStruct.hurtCoords.first,
-                            p1TrackpadStruct.hurtCoords.second
-                        )
-                    )
-                    drawCircle(
-                        hitcol, 15f,
-                        Offset(
-                            p1TrackpadStruct.hitCoords.first,
-                            p1TrackpadStruct.hitCoords.second
-                        )
-                    )
-                    drawCircle(
-                        hurtcol, 25f,
-                        Offset(
-                            p2TrackpadStruct.hurtCoords.first,
-                            p2TrackpadStruct.hurtCoords.second
-                        )
-                    )
-                    drawCircle(
-                        hitcol, 15f,
-                        Offset(
-                            p2TrackpadStruct.hitCoords.first,
-                            p2TrackpadStruct.hitCoords.second
-                        )
-                    )
+                Canvas(modifier = Modifier.fillMaxSize().align(Alignment.Center)) {
+                    val hurtcol = Color(0, 0, 255, if (collisionBoxesShown) { 127 } else { 0 })
+                    val hitcol = Color(255, 0, 0, if (collisionBoxesShown) { 127 } else { 0 })
+                    drawCircle(hurtcol, 25f, Offset(p1TrackpadStruct.hurtCoords.first, p1TrackpadStruct.hurtCoords.second))
+                    drawCircle(hitcol, 15f, Offset(p1TrackpadStruct.hitCoords.first, p1TrackpadStruct.hitCoords.second))
+                    drawCircle(hurtcol, 25f, Offset(p2TrackpadStruct.hurtCoords.first, p2TrackpadStruct.hurtCoords.second))
+                    drawCircle(hitcol, 15f, Offset(p2TrackpadStruct.hitCoords.first, p2TrackpadStruct.hitCoords.second))
                 }
             }
             winCheck(p1TrackpadStruct, p2TrackpadStruct)
         }
     }
 }
-
 fun winCheck(p1:Trackpad, p2:Trackpad) {
     val state1 = p1.updateState(p2)
-    if (state1 == TState.Dead){
-        p1Color = Color.White
-    }
     Log.e("STATE P1",state1.toString())
     val state2 = p2.updateState(p1)
-    if (state2 == TState.Dead) {
-        p2Color = Color.White
-    }
     Log.e("STATE P2",state2.toString())
 }
 
@@ -186,35 +157,54 @@ enum class TState {
     Immune,
     Cooldown
 }
-class Trackpad(private val screenDimensions:Pair<Float,Float>, private val screenDensity: Float, x: Float = 0f, y: Float = 0f, spin: Float = 90f) {
-    private var state by mutableStateOf(TState.Vulnerable)
-    private var offset by mutableStateOf(Pair(x, y))
-    private var spinOffset by mutableFloatStateOf(spin)
+class Trackpad(
+        private val screenDimensions:Pair<Float,Float>,
+        private val screenDensity: Float,
+        private val startx: Float = 0f,
+        private val starty: Float = 0f,
+        private val startSpin: Float = 90f,
+        val startcolor:Color = Color.White
+    ) {
+    var state by mutableStateOf(TState.Vulnerable)
+    private var offset by mutableStateOf(Pair(startx, starty))
+    private var spinOffset by mutableFloatStateOf(startSpin)
     private var oldTime by mutableLongStateOf(System.currentTimeMillis())
-    var hitCoords by mutableStateOf(Pair(Float.NaN,0f))
+    fun color(): Color {
+        return if (state == TState.Dead){Color.White} else {startcolor}
+    }
+    var hitCoords by mutableStateOf(Pair(Float.NaN, 0f))
         private set
-    private fun generateHitCoords(): Pair<Float,Float> = Pair(
-        (offset.first  +(imageWidth/2  +7*cos(spinOffset.toRadians())) * screenDensity),
-        (offset.second +(imageHeight/2 +7*sin(spinOffset.toRadians())) * screenDensity)
+    private fun generateHitCoords(): Pair<Float, Float> = Pair(
+        (offset.first + (imageWidth / 2 + 7 * cos(spinOffset.toRadians())) * screenDensity),
+        (offset.second + (imageHeight / 2 + 7 * sin(spinOffset.toRadians())) * screenDensity)
     )
-    var hurtCoords by mutableStateOf(Pair(0f,0f))
+    var hurtCoords by mutableStateOf(Pair(0f, 0f))
         private set
-    private fun generateHurtCoords(): Pair<Float,Float> = Pair(
-        (offset.first  +(imageHeight/2)*screenDensity ) - 15*cos((spinOffset).toRadians()),
-        (offset.second +(imageHeight/2)*screenDensity ) - 15*sin((spinOffset).toRadians())
+    private fun generateHurtCoords(): Pair<Float, Float> = Pair(
+        (offset.first + (imageHeight / 2) * screenDensity) - 15 * cos((spinOffset).toRadians()),
+        (offset.second + (imageHeight / 2) * screenDensity) - 15 * sin((spinOffset).toRadians())
     )
+
     private fun updateOffset(deltaX: Float, deltaY: Float) {
         offset = Pair(
             max(
-                -imageWidth/2 * screenDensity,
-                min(screenDimensions.first-imageWidth/2 * screenDensity,
-                    offset.first + deltaX * speedCoefficient)),
-            max(-imageHeight/2f * screenDensity,
-                min(screenDimensions.second- imageHeight/2 * screenDensity,
-                    offset.second + deltaY * speedCoefficient))
+                -imageWidth / 2 * screenDensity,
+                min(
+                    screenDimensions.first - imageWidth / 2 * screenDensity,
+                    offset.first + deltaX * speedCoefficient
+                )
+            ),
+            max(
+                -imageHeight / 2f * screenDensity,
+                min(
+                    screenDimensions.second - imageHeight / 2 * screenDensity,
+                    offset.second + deltaY * speedCoefficient
+                )
+            )
         )
         val weightCoef = 20
-        val spinVec: Pair<Float, Float> = Pair(cos(spinOffset.toRadians()), sin(spinOffset.toRadians()))
+        val spinVec: Pair<Float, Float> =
+            Pair(cos(spinOffset.toRadians()), sin(spinOffset.toRadians()))
         val dragVec: Pair<Float, Float> = Pair(deltaX, deltaY)
         val deltaR = (hypot(deltaX, deltaY))
         val dragUnit = Pair(1 * dragVec.first / deltaR, 1 * dragVec.second / deltaR)
@@ -227,12 +217,14 @@ class Trackpad(private val screenDimensions:Pair<Float,Float>, private val scree
             (spinVec.second * weightCoef + dragUnit.second * deltaWeight),
             (spinVec.first * weightCoef + dragUnit.first * deltaWeight)
         )).toDegrees()
-        Log.e("Angle Draw ",dragUnit.toString())
+        Log.e("Angle Draw ", dragUnit.toString())
     }
+
     init {
         hitCoords = generateHitCoords()
         hurtCoords = generateHurtCoords()
     }
+
     @Composable
     fun Pad(modifier: Modifier = Modifier, color: Color = Color.White) {
         Surface(
@@ -249,18 +241,18 @@ class Trackpad(private val screenDimensions:Pair<Float,Float>, private val scree
             color = color
         ) {}
     }
+
     @Composable
     fun Cursor(modifier: Modifier = Modifier, image: Int = R.drawable.white) {
         val paintImage = painterResource(
-            if (state != TState.Dead){
+            if (state != TState.Dead) {
                 image
-            }
-            else{
+            } else {
                 R.drawable.white
             }
         )
         Box(modifier = modifier
-            .offset{
+            .offset {
                 IntOffset(
                     (offset.first.roundToInt()),
                     (offset.second.roundToInt())
@@ -277,28 +269,42 @@ class Trackpad(private val screenDimensions:Pair<Float,Float>, private val scree
             )
         }
     }
-    
-    fun updateState(other:Trackpad): TState {
+    @Suppress("LiftReturnOrAssignment")
+    fun updateState(other: Trackpad): TState {
         if (other.state != TState.Dead) {
-            if (state == TState.Vulnerable) {
-                if (hitCoords.distanceTo(other.hitCoords) < 30) {
-                    state = TState.Immune
-                } else
-                    if (hurtCoords.distanceTo(other.hitCoords) < 40) {
+            when (state) {
+                TState.Vulnerable -> {
+                    if (hitCoords.distanceTo(other.hitCoords) < 30) {
+                        state = TState.Immune
+                    } else if (hurtCoords.distanceTo(other.hitCoords) < 40) {
                         state = TState.Dead
                     }
-            } else if (state == TState.Immune) {
-                if (hurtCoords.distanceTo(other.hitCoords) > 30 && hitCoords.distanceTo(other.hitCoords) > 30) {
-                    state = TState.Cooldown
                 }
-            } else if (state == TState.Cooldown) {
-                if (hurtCoords.distanceTo(other.hitCoords) < 30 || hitCoords.distanceTo(other.hitCoords) < 30) {
-                    state = TState.Immune
-                } else {
-                    state = TState.Vulnerable
+
+                TState.Immune -> {
+                    if (hurtCoords.distanceTo(other.hitCoords) > 30 && hitCoords.distanceTo(other.hitCoords) > 30) {
+                        state = TState.Cooldown
+                    }
                 }
+
+                TState.Cooldown -> {
+                    if (hurtCoords.distanceTo(other.hitCoords) < 30 || hitCoords.distanceTo(other.hitCoords) < 30) {
+                        state = TState.Immune
+                    } else {
+                        state = TState.Vulnerable
+                    }
+                }
+
+                TState.Dead -> {}
             }
         }
         return state
+    }
+    fun reset(){
+        state = TState.Vulnerable
+        offset = Pair(startx,starty)
+        spinOffset = startSpin
+        hitCoords = generateHitCoords()
+        hurtCoords = generateHurtCoords()
     }
 }
