@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -63,70 +65,79 @@ class MainActivity : ComponentActivity() {
                 LocalConfiguration.current.screenHeightDp.toFloat() * screenDensity
             val screenWidth =
                 LocalConfiguration.current.screenWidthDp.toFloat() * screenDensity
-            val p1TrackpadStruct by remember {
-                mutableStateOf(
-                    Trackpad(
-                        Pair(screenWidth,screenHeight),
-                        screenDensity,
-                        (screenWidth) * 1 / 2 - imageWidth * (screenDensity) / 2,
-                        (screenHeight) * 1 / 5 - imageHeight * (screenDensity) / 2,
-                        90f,
-                        Color.Cyan
-                    )
-                )
-            }
-            val p2TrackpadStruct by remember {
-                mutableStateOf(
-                    Trackpad(
-                        Pair(screenWidth,screenHeight),
-                        screenDensity,
-                        (screenWidth) * 1 / 2 - imageWidth * screenDensity / 2,
-                        (screenHeight) * 4 / 5 - imageHeight * screenDensity / 2,
-                        270f,
-                        Color.Yellow
-                    )
-                )
-            }
+            val p1TrackpadStruct by remember { mutableStateOf(Trackpad(
+                Pair(screenWidth,screenHeight),
+                screenDensity,
+                (screenWidth) * 1 / 2 - imageWidth * (screenDensity) / 2,
+                (screenHeight) * 1 / 5 - imageHeight * (screenDensity) / 2,
+                90f,
+                Color.Cyan
+            ))}
+            val p2TrackpadStruct by remember { mutableStateOf(Trackpad(
+                Pair(screenWidth,screenHeight),
+                screenDensity,
+                (screenWidth) * 1 / 2 - imageWidth * screenDensity / 2,
+                (screenHeight) * 4 / 5 - imageHeight * screenDensity / 2,
+                270f,
+                Color.Yellow
+            ))}
             Box(modifier = Modifier.fillMaxSize()) {
                 //Holds main Screen
                 Box(modifier = Modifier.fillMaxSize()) {
                     Log.e("Width", resources.getInteger(R.integer.imageWidth).toString())
                     Column(modifier = Modifier.fillMaxSize()) {
-                        p1TrackpadStruct.Pad(
-                            modifier = Modifier.weight(1f, true),
-                            color = p1TrackpadStruct.color()
-                        )
+                        Box(Modifier.weight(1f, true).fillMaxWidth()) {
+                            p1TrackpadStruct.Pad(
+                                Modifier.fillMaxSize(),
+                                color = p1TrackpadStruct.color()
+                            )
+                            if(p2TrackpadStruct.state == TState.Dead) {
+                                Image(
+                                    painterResource(R.drawable.cyan_restart),
+                                    null,
+                                    Modifier.align(Alignment.Center).scale(2f).clickable {
+                                        p1TrackpadStruct.reset()
+                                        p2TrackpadStruct.reset()
+                                    }
+                                )
+                            }
+                        }
                         Box(
                             Modifier
                                 .fillMaxWidth()
                                 .weight(0.5f)
                                 .background(
                                     Brush.verticalGradient(
-                                        arrayListOf(p1TrackpadStruct.color(), p2TrackpadStruct.color())
+                                        arrayListOf(
+                                            p1TrackpadStruct.color(),
+                                            p2TrackpadStruct.color()
+                                        )
                                     )
                                 )
-                        ){
-                           if ((p1TrackpadStruct.state == TState.Dead ) || (p2TrackpadStruct.state == TState.Dead)){
-                                Button(
-                                    onClick = {
+                        ){}
+                        Box(Modifier.weight(1f, true).fillMaxWidth()) {
+                            p2TrackpadStruct.Pad(
+                                Modifier.fillMaxSize(),
+                                color = p2TrackpadStruct.color()
+                            )
+                            if(p1TrackpadStruct.state == TState.Dead) {
+                                Image(
+                                    painterResource(R.drawable.yellow_restart),
+                                    null,
+                                    Modifier.align(Alignment.Center).scale(2f).clickable {
                                         p1TrackpadStruct.reset()
                                         p2TrackpadStruct.reset()
-                                    },
-                                    Modifier.align(Alignment.Center)
-                                ) {
-                                    Text(text = "Reset")
-                                }
-                           }
+                                    }
+                                )
+                            }
                         }
-                        p2TrackpadStruct.Pad(
-                            modifier = Modifier.weight(1f, true),
-                            color = p2TrackpadStruct.color()
-                        )
                     }
                     p1TrackpadStruct.Cursor(image = R.drawable.cyan)
                     p2TrackpadStruct.Cursor(image = R.drawable.yellow)
                 }
-                Canvas(modifier = Modifier.fillMaxSize().align(Alignment.Center)) {
+                Canvas(modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center)) {
                     val hurtcol = Color(0, 0, 255, if (collisionBoxesShown) { 127 } else { 0 })
                     val hitcol = Color(255, 0, 0, if (collisionBoxesShown) { 127 } else { 0 })
                     drawCircle(hurtcol, 25f, Offset(p1TrackpadStruct.hurtCoords.first, p1TrackpadStruct.hurtCoords.second))
