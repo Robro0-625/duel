@@ -17,9 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -89,7 +87,8 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.weight(1f, true).fillMaxWidth()) {
                             p1TrackpadStruct.Pad(
                                 Modifier.fillMaxSize(),
-                                color = p1TrackpadStruct.color()
+                                color = p1TrackpadStruct.color(),
+                                other = p2TrackpadStruct
                             )
                             if(p2TrackpadStruct.state == TState.Dead) {
                                 Image(
@@ -118,7 +117,8 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.weight(1f, true).fillMaxWidth()) {
                             p2TrackpadStruct.Pad(
                                 Modifier.fillMaxSize(),
-                                color = p2TrackpadStruct.color()
+                                color = p2TrackpadStruct.color(),
+                                other = p1TrackpadStruct
                             )
                             if(p1TrackpadStruct.state == TState.Dead) {
                                 Image(
@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
                     drawCircle(hitcol, 15f, Offset(p2TrackpadStruct.hitCoords.first, p2TrackpadStruct.hitCoords.second))
                 }
             }
-            winCheck(p1TrackpadStruct, p2TrackpadStruct)
+            //winCheck(p1TrackpadStruct, p2TrackpadStruct)
         }
     }
 }
@@ -169,19 +169,19 @@ enum class TState {
     Cooldown
 }
 class Trackpad(
-        private val screenDimensions:Pair<Float,Float>,
-        private val screenDensity: Float,
-        private val startx: Float = 0f,
-        private val starty: Float = 0f,
-        private val startSpin: Float = 90f,
-        val startcolor:Color = Color.White
+    private val screenDimensions:Pair<Float,Float>,
+    private val screenDensity: Float,
+    private val startX: Float = 0f,
+    private val startY: Float = 0f,
+    private val startSpin: Float = 90f,
+    private val startColor:Color = Color.White
     ) {
     var state by mutableStateOf(TState.Vulnerable)
-    private var offset by mutableStateOf(Pair(startx, starty))
+    private var offset by mutableStateOf(Pair(startX, startY))
     private var spinOffset by mutableFloatStateOf(startSpin)
     private var oldTime by mutableLongStateOf(System.currentTimeMillis())
     fun color(): Color {
-        return if (state == TState.Dead){Color.White} else {startcolor}
+        return if (state == TState.Dead){Color.White} else {startColor}
     }
     var hitCoords by mutableStateOf(Pair(Float.NaN, 0f))
         private set
@@ -195,7 +195,6 @@ class Trackpad(
         (offset.first + (imageHeight / 2) * screenDensity) - 15 * cos((spinOffset).toRadians()),
         (offset.second + (imageHeight / 2) * screenDensity) - 15 * sin((spinOffset).toRadians())
     )
-
     private fun updateOffset(deltaX: Float, deltaY: Float) {
         offset = Pair(
             max(
@@ -237,7 +236,7 @@ class Trackpad(
     }
 
     @Composable
-    fun Pad(modifier: Modifier = Modifier, color: Color = Color.White) {
+    fun Pad(modifier: Modifier = Modifier, color: Color = Color.White,other:Trackpad) {
         Surface(
             modifier = modifier
                 .fillMaxWidth()
@@ -247,6 +246,8 @@ class Trackpad(
                         updateOffset(dragAmount.x, dragAmount.y)
                         hitCoords = generateHitCoords()
                         hurtCoords = generateHurtCoords()
+                        winCheck(this@Trackpad,other)
+                        winCheck(other,this@Trackpad)
                     }
                 },
             color = color
@@ -313,7 +314,7 @@ class Trackpad(
     }
     fun reset(){
         state = TState.Vulnerable
-        offset = Pair(startx,starty)
+        offset = Pair(startX,startY)
         spinOffset = startSpin
         hitCoords = generateHitCoords()
         hurtCoords = generateHurtCoords()
