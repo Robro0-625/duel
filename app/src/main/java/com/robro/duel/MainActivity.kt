@@ -49,8 +49,6 @@ const val imageHeight = 20
 const val imageWidth = 20
 fun Float.toRadians(): Float = this / 180f * PI.toFloat()
 fun Float.toDegrees(): Float = this * 180f / PI.toFloat()
-//var p1Color by mutableStateOf(Color.Cyan)
-//var p2Color by mutableStateOf(Color.Yellow)
 const val collisionBoxesShown = false
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
@@ -146,7 +144,6 @@ class MainActivity : ComponentActivity() {
                     drawCircle(hitcol, 15f, Offset(p2TrackpadStruct.hitCoords.first, p2TrackpadStruct.hitCoords.second))
                 }
             }
-            //winCheck(p1TrackpadStruct, p2TrackpadStruct)
         }
     }
 }
@@ -223,7 +220,6 @@ class Trackpad(
         val deltaWeight = deltaR * max(deltaTime.toFloat(), 30.0F) / 15
         oldTime = currentTime
         spinOffset = (atan2(
-            //dragUnit.second,dragUnit.first
             (spinVec.second * weightCoef + dragUnit.second * deltaWeight),
             (spinVec.first * weightCoef + dragUnit.first * deltaWeight)
         )).toDegrees()
